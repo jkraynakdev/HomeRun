@@ -14,7 +14,7 @@ from sklearn.datasets import make_classification
 from sklearn.model_selection import cross_val_score
 from sklearn.model_selection import RepeatedStratifiedKFold
 from sklearn.metrics import roc_curve, roc_auc_score, classification_report, accuracy_score, confusion_matrix 
-from sklearn.metrics import r2_score
+from sklearn.metrics import cohen_kappa_score
 
 
 class Models:
@@ -36,8 +36,8 @@ class Models:
 		self.sampled_df = self.data_object.random_concat
 
 		# Constant to store feature options
-		self.FEATURES = ['pfx_x', 'pfx_z', 'velo', 'zone', 'spin', 'effective_velo', 'VAA']
-		
+		self.FEATURES = ['pfx_x', 'pfx_z', 'release_speed', 'zone', 'release_spin_rate', 'effective_speed', 'VAA']
+
 		# Constant to store pitch types
 		#self.PITCH_TYPES = ['SL', 'FF', 'FC', 'SI', 'CH', 'CU', 'FS', 'KC']
 		self.PITCH_TYPES = ['SL', 'FF', 'SI', 'CH', 'CU']
@@ -45,18 +45,10 @@ class Models:
 
 	def create_feature_frame(self, df):
 		'''Returns a DataFrame of with given features'''
-
-		hor_break = self.data_object.get_horizontal_break(df)
-		ver_break = self.data_object.get_vertical_break(df)
-		velo = self.data_object.get_velo(df)
-		zone = self.data_object.get_zone(df)
-		spin = self.data_object.get_spin(df)
-		effective_velo = self.data_object.get_effective_velo(df)
-		VAA = self.data_object.get_VAA(df)
-
-		return pd.DataFrame({'hor_break': hor_break, 'ver_break': ver_break,
-							'velo': velo, 'zone': zone, 'spin': spin, 'effective_velo': effective_velo,
-							'VAA': VAA})
+		feature_dict = {}	
+		for feature in self.FEATURES:
+			feature_dict[feature] = self.data_object.get_feature(df, feature)
+		return pd.DataFrame(feature_dict)
 
 	def clean_data(self, df1, df2) -> list:
 		'''Pairwise elminates NaN values and returns a list of clean DataFrames'''
@@ -88,13 +80,11 @@ class Models:
 
 		rfe = RFE(logreg, n_features_to_select=3)
 		rfe = rfe.fit(X, y.values.ravel())
-		print(rfe.support_)
-		print(rfe.ranking_)
-
 
 		for i in range(len(rfe.ranking_)):
 			if rfe.ranking_[i] == 1:
 				selected_features.append(self.FEATURES[i])
+		print(selected_features)
 
 		return selected_features
 
@@ -107,10 +97,10 @@ class Models:
 		y, X = cleaned_data[1], cleaned_data[0]
 		X = X[X.columns[X.columns.isin(self.feature_elemination(pitch_type))]]
 		
-		X_train, X_test, y_train, y_test = train_test_split(X, y.values.ravel(), test_size=0.3, random_state=101)
+		X_train, X_test, y_train, y_test = train_test_split(X, y.values.ravel(), test_size=0.33, random_state=101)
 
 
-		logmodel = LogisticRegression()
+		logmodel = LogisticRegression(class_weight='balanced')
 		logmodel = logmodel.fit(X_train, y_train)
 
 		y_pred = logmodel.predict(X_test)
@@ -128,7 +118,6 @@ class Models:
 		scores = cross_val_score(logmodel, X_train, y_train, scoring='roc_auc', cv=cv, n_jobs=-1)
 		# summarize performance
 		print('Mean ROC AUC: %.3f' % mean(scores))
-
 		print('\n\n\n')
 
 

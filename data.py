@@ -62,33 +62,18 @@ class Data:
 
 		return cat_vars
 
-	def get_horizontal_break(self, in_df) -> list:
-		pfx_x = []
-		pfx_x.append(in_df['pfx_x'].apply(lambda x: x).values.tolist())
+	def get_feature(self, in_df, feature: str) -> list:
+		''' TODO '''
+		# VAA has slightly different logic
+		if feature == 'VAA':
+			return self.get_VAA(in_df)
 
-		# Flatten and return
-		return pfx_x[0]
+		else:
+			feature_list = []
+			feature_list.append(in_df[feature].apply(lambda x: x).values.tolist())
 
-	def get_vertical_break(self, in_df) -> list:
-		pfx_z = []
-		pfx_z.append(in_df['pfx_z'].apply(lambda x: x).values.tolist())
-
-		# Flatten and return
-		return pfx_z[0]
-
-	def get_velo(self, in_df) -> list:
-		velos = []
-		velos.append(in_df['release_speed'].apply(lambda x: x).values.tolist())
-
-		# Flatten and return
-		return velos[0]
-
-	def get_zone(self, in_df) -> list:
-		zones = []
-		zones.append(in_df['zone'].apply(lambda x: x).values.tolist())
-
-		# Flatten and return
-		return zones[0]
+			# Flatten and return
+			return feature_list[0]
 
 	def get_pitch_type(self, in_df) -> list:
 		pitch_types = []
@@ -96,20 +81,6 @@ class Data:
 
 		# Flatten and return
 		return pitch_types[0]
-
-	def get_spin(self, in_df) -> list:
-		spin_rates = []
-		spin_rates.append(in_df['release_spin_rate'].apply(lambda x: x).values.tolist())
-
-		# Flatten and return
-		return spin_rates[0]
-
-	def get_effective_velo(self, in_df) -> list:
-		effective_velo = []
-		effective_velo.append(in_df['effective_speed'].apply(lambda x: x).values.tolist())
-
-		# Flatten and return
-		return effective_velo[0]
 
 	def calc_approach(self, v_y: float, a_y: float, 
 						v_z: float, a_z: float) -> float:
